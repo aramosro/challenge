@@ -35,14 +35,13 @@ public class AccountsRepositoryInMemory implements AccountsRepository {
     }
 
     /**
-     * THIS METHOD TRANSFER METHOD BETWEEN TWO ACCOUNTS
+     * THIS METHOD TRANSFER AMOUNT BETWEEN TWO ACCOUNTS
      *
      * @param transfer
      * @throws InvalidBalanceException
      */
     @Override
     public void transfer(Transfer transfer) throws InvalidBalanceException {
-
         //READ, VALIDATE BALANCE AND UPDATE "FROM" ACCOUNT IN THREAD-SAFE MODE, USING COMPUTE METHOD FROM CONCURRENTHASMAP COLLECTION
         Account fromAccount = accounts.compute(transfer.getAccountFromId(), (key, val)
                 -> {

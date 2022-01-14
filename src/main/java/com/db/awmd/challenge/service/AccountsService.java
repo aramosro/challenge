@@ -42,10 +42,8 @@ public class AccountsService {
         if (transfer.getAccountFromId() != null && transfer.getAccountToId() != null) {
             accountsTransferValidations(transfer.getAccountFromId(), transfer.getAccountToId());
         } else {
-            throw new InvalidAccountException("Account cant be null");
+            throw new InvalidAccountException("Account can not be null");
         }
-        Account fromAccount = this.getAccount(transfer.getAccountFromId());
-        Account toAccount = this.getAccount(transfer.getAccountToId());
         this.accountsRepository.transfer(transfer);
     }
 
@@ -57,7 +55,7 @@ public class AccountsService {
      */
     private void accountsTransferValidations(String fromAccountId, String toAccountId) {
         String message = null;
-        //CHECK IF FROMACCOUNT AND TOACCOUNT ARE THE SAME
+        //CHECK IF "FROM "ACCOUNT AND "TO" ACCOUNT ARE THE SAME
         if (fromAccountId.equals(toAccountId)) {
             message = "From and To Accounts are the same";
         }
@@ -66,13 +64,12 @@ public class AccountsService {
             message = this.existAccount(Arrays.asList(fromAccountId, toAccountId));
         }
         if (message != null) {
-            throw new InvalidAccountException(
-                    message);
+            throw new InvalidAccountException(message);
         }
     }
 
     /**
-     * THIS METHOD CHECK IF ACCOUNTS EXIST, RETURN NULL IF ALL ACCOUNTS EXIST AND A MESSAGE IF NOT
+     * THIS METHOD CHECK IF ACCOUNTS EXIST, RETURN NULL IF ALL ACCOUNTS EXIST AND A ERROR MESSAGE IF NOT
      *
      * @param accountIds
      * @return message

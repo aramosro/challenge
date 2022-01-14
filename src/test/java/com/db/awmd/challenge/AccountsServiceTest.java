@@ -15,10 +15,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
@@ -29,6 +35,9 @@ public class AccountsServiceTest {
 
     @Autowired
     private AccountsService accountsService;
+
+    private Timestamp thread1Start;
+    private Timestamp thread2Start;
 
     @Before
     public void setupMock() {
@@ -74,13 +83,10 @@ public class AccountsServiceTest {
         List<String> list = new ArrayList<>();
         list.add(account.getAccountId());
         list.add("Id-9999");
-        try {
-            String message = this.accountsService.existAccount(list);
-            fail("Should have failed when account not exist");
-        }catch(InvalidAccountException ex){
-            assertThat(ex.getMessage()).isEqualTo("account: Id-9999 not exist");
-        }
+        String message = this.accountsService.existAccount(list);
+        assertThat(message).isEqualTo("account: Id-9999 not exist");
     }
+
     /**
      * TEST TRANSFER ACCOUNT NOT EXIST
      *
@@ -109,7 +115,7 @@ public class AccountsServiceTest {
      * @throws Exception
      */
     @Test
-    public void transferInvalidAccountS() throws Exception {
+    public void transferInvalidAccounts() throws Exception {
         Account account = new Account("Id-123");
         account.setBalance(new BigDecimal(1000));
         this.accountsService.createAccount(account);
@@ -142,7 +148,7 @@ public class AccountsServiceTest {
             accountsService.transfer(transfer);
             fail("Should have failed when when account is null");
         } catch (InvalidAccountException ex) {
-            assertThat(ex.getMessage()).isEqualTo("Account cant be null");
+            assertThat(ex.getMessage()).isEqualTo("Account can not be null");
         }
     }
 
@@ -179,26 +185,51 @@ public class AccountsServiceTest {
         this.accountsService.createAccount(account2);
         Transfer transfer = new Transfer(account.getAccountId(), account2.getAccountId(), new BigDecimal(1));
         Transfer transfer2 = new Transfer(account2.getAccountId(), account.getAccountId(), new BigDecimal(2001));
-        //USE CountDownLatch TO WAIT UNTIL BOTH THREADS ENDS TO CHECK THE ACCOUNTS
-        CountDownLatch latch = new CountDownLatch(1);
+        thread1Start = null;
         //START TWO THREAD (FROM A TO B, FROM B TO A) TO TEST THREAD-SAFE AND DEADLOCKS
         new Thread(() -> {
+            try {
+                Thread.sleep(1 * 1000);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+            thread1Start = new Timestamp(System.currentTimeMillis());
+            log.info("thread 1 start : " + thread1Start);
             accountsService.transfer(transfer);
         }).start();
 
         new Thread(() -> {
-            accountsService.transfer(transfer2);
+            try {
+                Thread.sleep(1 * 1003);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+            thread2Start = new Timestamp(System.currentTimeMillis());
+            log.info("thread 2 start : " + thread2Start);
+            try {
+                accountsService.transfer(transfer2);
+            } catch (InvalidBalanceException ex) {
+                //IF THREAD 2 TRANSFER START BEFORE THREAD 1 TRANSFER, THE BALANCES ARE INVALID, THREAD 2 TRANSFER CAN NOT BE PROCESSED
+                log.info("thread 2 start before thread 1");
+                assertThat(thread1Start == null || thread1Start.compareTo(thread2Start) > 0);
+                assertThat(ex.getMessage()).isEqualTo("account balance can not be negative");
+            }
         }).start();
-        Thread.sleep(10);
-        latch.countDown();
-        //WAIT UNTIL THREADS FINISH
-        latch.await();
-        //GET ACCOUNT AND CHECKS IF BALANCES ARE OK
-        Account acc = this.accountsService.getAccount("Id-123");
-        Account acc2 = this.accountsService.getAccount("Id-1234");
-        log.info("balance after thread-safe :" + acc.getBalance());
-        log.info("balance after thread-safe :" + acc2.getBalance());
-        assertThat(acc.getBalance()).isEqualByComparingTo("3000");
-        assertThat(acc2.getBalance()).isEqualByComparingTo("0");
+        //WAIT UNTIL THREADS FINISH TO CHECK THE BALANCES
+        try {
+            Thread.sleep(2 * 1000);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+        //IF THREAD 1 TRANSFER START BEFORE THREAD 2 TRANSFER THE BALANCES ARE CORRECT
+        if (thread1Start != null && thread1Start.compareTo(thread2Start) < 0) {
+            Account acc = this.accountsService.getAccount("Id-123");
+            Account acc2 = this.accountsService.getAccount("Id-1234");
+            log.info("balance after thread-safe :" + acc.getBalance());
+            log.info("balance after thread-safe :" + acc2.getBalance());
+            assertThat(acc.getBalance()).isEqualByComparingTo("3000");
+            assertThat(acc2.getBalance()).isEqualByComparingTo("0");
+        }
+
     }
 }
