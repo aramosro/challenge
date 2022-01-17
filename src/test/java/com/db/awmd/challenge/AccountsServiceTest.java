@@ -178,7 +178,7 @@ public class AccountsServiceTest {
         this.accountsService.createAccount(account2);
         Transfer transfer = new Transfer(account.getAccountId(), account2.getAccountId(), new BigDecimal(1));
         Transfer transfer2 = new Transfer(account2.getAccountId(), account.getAccountId(), new BigDecimal(2001));
-        //START TWO THREAD (FROM A TO B, FROM B TO A) TO TEST THREAD-SAFE AND DEADLOCKS
+        //START TWO THREADS (FROM 1 TO 2, FROM 2 TO 1) TO TEST THREAD-SAFE AND DEADLOCKS
         new Thread(() -> {
             log.info("thread 1 start : " + new Timestamp(System.currentTimeMillis()));
             thread1Startbefore=true;
@@ -195,7 +195,7 @@ public class AccountsServiceTest {
                 assertThat(ex.getMessage()).isEqualTo("account balance can not be negative");
             }
         }).start();
-        //WAIT UNTIL THREADS FINISH TO CHECK THE BALANCES
+        //WAIT UNTIL THREADS FINISHED, TO CHECK THE BALANCES
         try {
             Thread.sleep(2 * 1000);
         } catch (InterruptedException ie) {
@@ -207,7 +207,7 @@ public class AccountsServiceTest {
         log.info("balance after thread-safe :" + acc.getBalance());
         log.info("balance after thread-safe :" + acc2.getBalance());
         if(thread1Startbefore){
-            log.info("thread 1 start before thread 2, both transfers done");
+            log.info("thread 1 start before thread 2, both transfers are done");
             assertThat(acc.getBalance()).isEqualByComparingTo("3000");
             assertThat(acc2.getBalance()).isEqualByComparingTo("0");
         }else{

@@ -32,10 +32,9 @@ public class AccountsService {
     }
 
     /**
-     * THE TRANSFER SERVICE METHOD
+     * THE TRANSFER OBJECT METHOD
      *
-     * @param transfer
-     * @return accounts list
+     * @param transfer The transfer object
      */
     public void transfer(Transfer transfer) {
         //VALIDATE ACCOUNTS
@@ -50,7 +49,8 @@ public class AccountsService {
     /**
      * THIS METHOD VALIDATE THE TRANSFER ACCOUNTS
      *
-     * @param fromAccountId,toAccountId
+     * @param fromAccountId Account from where the money is transferred
+     * @param toAccountId Account to which the money is transferred
      * @return message
      */
     private void accountsTransferValidations(String fromAccountId, String toAccountId) {
@@ -71,7 +71,7 @@ public class AccountsService {
     /**
      * THIS METHOD CHECK IF ACCOUNTS EXIST, RETURN NULL IF ALL ACCOUNTS EXIST AND A ERROR MESSAGE IF NOT
      *
-     * @param accountIds
+     * @param accountIds List of accounts to check if exist
      * @return message
      */
     public String existAccount(List<String> accountIds) {

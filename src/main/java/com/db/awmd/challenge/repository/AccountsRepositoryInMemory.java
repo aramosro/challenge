@@ -37,7 +37,7 @@ public class AccountsRepositoryInMemory implements AccountsRepository {
     /**
      * THIS METHOD TRANSFER AMOUNT BETWEEN TWO ACCOUNTS
      *
-     * @param transfer
+     * @param transfer The transfer object
      * @throws InvalidBalanceException
      */
     @Override
@@ -58,8 +58,8 @@ public class AccountsRepositoryInMemory implements AccountsRepository {
             return val;
         });
         //NOTIFY TRANSFER WAS SUCCESSFUL
-        this.notificationService.notifyAboutTransfer(fromAccount, "tranfers to account " + transfer.getAccountToId() + " finish succesfully");
-        this.notificationService.notifyAboutTransfer(toAccount, "tranfers from account " + transfer.getAccountFromId() + " finish succesfully");
+        this.notificationService.notifyAboutTransfer(fromAccount, "transfers to account " + transfer.getAccountToId() + " finish successfully");
+        this.notificationService.notifyAboutTransfer(toAccount, "transfers from account " + transfer.getAccountFromId() + " finish successfully");
 
     }
 

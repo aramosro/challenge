@@ -70,10 +70,10 @@ public class AccountsController {
     }
 
     /**
-     * THIS METHOD TRANSFORM THE MethodArgumentNotValidException MESSAGE INTO A MORE FRIENDLY ONE
+     * THIS METHOD TRANSFORM THE MethodArgumentNotValidException MESSAGE INTO A MORE FRIENDLY LIST OF ERRORS
      *
-     * @param ex
-     * @return errors
+     * @param ex Exception
+     * @return errors List of formatted errors
      */
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
