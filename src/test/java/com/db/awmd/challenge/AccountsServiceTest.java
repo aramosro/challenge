@@ -30,8 +30,7 @@ public class AccountsServiceTest {
     @Autowired
     private AccountsService accountsService;
 
-    private Boolean thread1Startbefore = true;
-    private Timestamp thread2Start;
+    private Boolean thread1Startbefore;
 
     @Before
     public void setupMock() {
@@ -179,8 +178,6 @@ public class AccountsServiceTest {
         this.accountsService.createAccount(account2);
         Transfer transfer = new Transfer(account.getAccountId(), account2.getAccountId(), new BigDecimal(1));
         Transfer transfer2 = new Transfer(account2.getAccountId(), account.getAccountId(), new BigDecimal(2001));
-        //thread1Start = null;
-        thread1Startbefore = true;
         //START TWO THREAD (FROM A TO B, FROM B TO A) TO TEST THREAD-SAFE AND DEADLOCKS
         new Thread(() -> {
             log.info("thread 1 start : " + new Timestamp(System.currentTimeMillis()));
@@ -189,8 +186,7 @@ public class AccountsServiceTest {
         }).start();
 
         new Thread(() -> {
-            thread2Start = new Timestamp(System.currentTimeMillis());
-            log.info("thread 2 start : " + thread2Start);
+            log.info("thread 2 start : " + new Timestamp(System.currentTimeMillis()));
             try {
                 accountsService.transfer(transfer2);
             } catch (InvalidBalanceException ex) {
