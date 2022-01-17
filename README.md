@@ -6,7 +6,7 @@ A Gradle Spring boot REST application for create,get accounts and transfer money
 Upgrade to a production application
 ===================================
 
-To convert this basic app to a "production" app, I consider to improve some actions nd add some new functionalities:
+To convert this basic app to a "production" app, I consider to improve some actions and add some new functionalities:
 
 - use a real database(MySQL, PostgreSQL, Oracle,..).
 - add a framework to database management as spring data, mybatis ... 
