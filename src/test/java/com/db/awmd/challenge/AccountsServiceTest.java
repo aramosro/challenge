@@ -30,7 +30,7 @@ public class AccountsServiceTest {
     @Autowired
     private AccountsService accountsService;
 
-    private Timestamp thread1Start;
+    private Boolean thread1Startbefore = true;
     private Timestamp thread2Start;
 
     @Before
@@ -179,33 +179,23 @@ public class AccountsServiceTest {
         this.accountsService.createAccount(account2);
         Transfer transfer = new Transfer(account.getAccountId(), account2.getAccountId(), new BigDecimal(1));
         Transfer transfer2 = new Transfer(account2.getAccountId(), account.getAccountId(), new BigDecimal(2001));
-        thread1Start = null;
+        //thread1Start = null;
+        thread1Startbefore = true;
         //START TWO THREAD (FROM A TO B, FROM B TO A) TO TEST THREAD-SAFE AND DEADLOCKS
         new Thread(() -> {
-            try {
-                Thread.sleep(1 * 1000);
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
-            thread1Start = new Timestamp(System.currentTimeMillis());
-            log.info("thread 1 start : " + thread1Start);
+            log.info("thread 1 start : " + new Timestamp(System.currentTimeMillis()));
+            thread1Startbefore=true;
             accountsService.transfer(transfer);
         }).start();
 
         new Thread(() -> {
-            try {
-                Thread.sleep(1 * 1003);
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
             thread2Start = new Timestamp(System.currentTimeMillis());
             log.info("thread 2 start : " + thread2Start);
             try {
                 accountsService.transfer(transfer2);
             } catch (InvalidBalanceException ex) {
                 //IF THREAD 2 TRANSFER START BEFORE THREAD 1 TRANSFER, THE BALANCES ARE INVALID, THREAD 2 TRANSFER CAN NOT BE PROCESSED
-                log.info("thread 2 start before thread 1");
-                assertThat(thread1Start == null || thread1Start.compareTo(thread2Start) > 0);
+                thread1Startbefore=false;
                 assertThat(ex.getMessage()).isEqualTo("account balance can not be negative");
             }
         }).start();
@@ -216,14 +206,18 @@ public class AccountsServiceTest {
             Thread.currentThread().interrupt();
         }
         //IF THREAD 1 TRANSFER START BEFORE THREAD 2 TRANSFER THE BALANCES ARE CORRECT
-        if (thread1Start != null && thread1Start.compareTo(thread2Start) < 0) {
-            Account acc = this.accountsService.getAccount("Id-123");
-            Account acc2 = this.accountsService.getAccount("Id-1234");
-            log.info("balance after thread-safe :" + acc.getBalance());
-            log.info("balance after thread-safe :" + acc2.getBalance());
+        Account acc = this.accountsService.getAccount("Id-123");
+        Account acc2 = this.accountsService.getAccount("Id-1234");
+        log.info("balance after thread-safe :" + acc.getBalance());
+        log.info("balance after thread-safe :" + acc2.getBalance());
+        if(thread1Startbefore){
+            log.info("thread 1 start before thread 2, both transfers done");
             assertThat(acc.getBalance()).isEqualByComparingTo("3000");
             assertThat(acc2.getBalance()).isEqualByComparingTo("0");
+        }else{
+            log.info("thread 2 start before thread 1, only transfer 1 done, transfer 2 has invalid balance");
+            assertThat(acc.getBalance()).isEqualByComparingTo("999");
+            assertThat(acc2.getBalance()).isEqualByComparingTo("2001");
         }
-
     }
 }

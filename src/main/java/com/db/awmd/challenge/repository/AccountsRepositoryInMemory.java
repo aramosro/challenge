@@ -58,8 +58,8 @@ public class AccountsRepositoryInMemory implements AccountsRepository {
             return val;
         });
         //NOTIFY TRANSFER WAS SUCCESSFUL
-        this.notificationService.notifyAboutTransfer(fromAccount, "tranfers to account " + transfer.getAccountFromId() + " finish succesfully");
-        this.notificationService.notifyAboutTransfer(toAccount, "tranfers from account " + transfer.getAccountToId() + " finish succesfully");
+        this.notificationService.notifyAboutTransfer(fromAccount, "tranfers to account " + transfer.getAccountToId() + " finish succesfully");
+        this.notificationService.notifyAboutTransfer(toAccount, "tranfers from account " + transfer.getAccountFromId() + " finish succesfully");
 
     }
 
